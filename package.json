@@ -1,0 +1,16 @@
+{
+	"name": "telegram-bot-bitbucket",
+	"version": "1.0.0",
+	"author": "Asahui",
+	"description": "Bitbucket modules for telegram-bot-coffee",
+	"license": "GPL-3.0.0",
+	"homepage": "https://github.com/asahui/telegram-bot-bitbucket",
+	"dependencies": {
+		"telegram-bot-coffee": ">=1.0.0",
+    "ascii-table": ">=0.0.8"
+	},
+	"scripts": {
+		"prepublish": "cake build"
+	},
+	"main": "./lib/functions"
+}
