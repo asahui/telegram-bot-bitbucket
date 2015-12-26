@@ -38,10 +38,18 @@ exports.setup = (telegram, store, server) ->
         for chat_id in config.push_ids
           telegram.sendMessage chat_id, parser.parseNotification(msg), parse_mode = "Markdown"
     ,
+      cmd: 'secret'
+      num: 0
+      desc: 'If you could decode the message, you will know the secret command'
+      act: (msg) ->
+        secretMsg = new Buffer 'Here are the secret commands:\n/anime\n/meizi\nUse `/help command` to see the details'
+          .toString 'base64'
+        telegram.sendMessage msg.chat.id, secretMsg, parse_mode = "Markdown"
+    ,
       cmd: 'hitokoto'
       num: 3
       opt: 3
-      desc: 'get one sentence'
+      desc: 'Get one sentence'
       act: (msg, cat, mix, ucat) =>
         api = "http://api.hitokoto.us/rand"
         qs = {}
