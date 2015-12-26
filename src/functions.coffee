@@ -96,9 +96,9 @@ exports.hack = ->
       ###
       # req.params.text = '/{X-Event-Key(repo:push)}'
       # If hack done, reutrn true else return false
-      if (req.header 'User-Agent'
-          .toLowerCase null
-          .indexOf 'bitbucket') >= 0
+      ua = req.header 'User-Agent'
+      if ua? and ua .toLowerCase null
+          .indexOf 'bitbucket' >= 0
         req.params.message_id = 1
         req.params.text = '/' + req.header 'X-Event-Key'
         req.params.chat = {}
