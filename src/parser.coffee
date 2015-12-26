@@ -1,5 +1,3 @@
-AsciiTable = require('ascii-table')
-
 exports.parseNotification = (msg) ->
   try
     push = msg.push

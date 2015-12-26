@@ -1,9 +1,12 @@
+request = require 'request'
+
 exports.name = 'bitbucket'
 exports.desc = 'forward bitbucket notification'
 
 exports.setup = (telegram, store, server) ->
   parser = require './parser'
   pkg = require '../package.json'
+  config = require '../config.json'
 
   [
       cmd: 'hello'
@@ -31,9 +34,26 @@ exports.setup = (telegram, store, server) ->
       desc:'Do not call this method. It is used by bitbucket webhook'
       act: (msg) ->
         # push object parser and handle logic
-        chat_id = 147652367
-        #push_notification = 'some one push code on bitbucket'
-        telegram.sendMessage chat_id, parser.parseNotification(msg), parse_mode = "Markdown"
+        chat_id = config
+        for chat_id in config.push_ids
+          telegram.sendMessage chat_id, parser.parseNotification(msg), parse_mode = "Markdown"
+    ,
+      cmd: 'hitokoto'
+      num: 3
+      opt: 3
+      desc: 'get one sentence'
+      act: (msg, cat, mix, ucat) =>
+        api = "http://api.hitokoto.us/rand"
+        qs = {}
+        qs.cat = cat if cat?
+        qs.mix = mix if mix?
+        qs.ucat = ucat if mix? and ucat?
+        console.log(qs)
+        request {url: api, qs: qs, json:true}, (err, req, res) ->
+          console.log(res)
+          telegram.sendMessage msg.chat.id, res.hitokoto if res.hitokoto?
+
+
   ]
 
 exports.hack = ->
@@ -67,6 +87,7 @@ exports.hack = ->
       }
       ###
       # req.params.text = '/{X-Event-Key(repo:push)}'
+      # If hack done, reutrn true else return false
       if (req.header 'User-Agent'
           .toLowerCase null
           .indexOf 'bitbucket') >= 0
@@ -76,4 +97,6 @@ exports.hack = ->
         req.params.chat.id = 1
         req.params.from = {}
         req.params.from.id = 1
+        return true
+      return false
   ]
