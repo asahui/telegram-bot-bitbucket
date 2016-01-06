@@ -37,7 +37,9 @@ exports.search = search = (keyword, callback) ->
                 callback rows
 
 exports.list = list = (page, callback) ->
-  offset = if page? then (page - 1) * 10 else 0
+  if page? and !(!isNaN(parseInt(page)) and isFinite(page))
+    return callback [], 0
+  offset = if page? then (parseInt(page) - 1) * 10 else 0
   db.serialize ->
     total = 0
     db.all "select count(rowid) as totalnum from tbb", (err, rows) =>
