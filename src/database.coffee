@@ -19,18 +19,17 @@ exports.close = close = ->
   db.close()
 
 
-exports.add = add = (title, hints, author) ->
+exports.add = add = (title, hints, author, callback) ->
   db.serialize ->
     db.run "insert into tbb (title, hints, author)
               values (?, ?, ?)", [title, hints, author], (err) ->
-                if (err?)
-                  console.log(err)
+                callback err
 
 # Search title and hints with keyword and handle result with callback
 # callback accept a rows object return by db.all callback function:w
 exports.search = search = (keyword, callback) ->
   db.serialize ->
-    db.all "select * from tbb
+    db.all "select rowid as id, * from tbb
               where title like ?
               or hints like ?", ["%#{keyword}%", "%#{keyword}%"], (err, rows) ->
                 if (err?)
@@ -38,8 +37,25 @@ exports.search = search = (keyword, callback) ->
                 callback rows
 
 exports.list = list = (page, callback) ->
-  offset = if page? then page * 10 else 0
+  offset = if page? then (page - 1) * 10 else 0
   db.serialize ->
-    db. all "select * from tbb
+    total = 0
+    db.all "select count(rowid) as totalnum from tbb", (err, rows) =>
+      total = rows[0].totalnum
+
+    db.all "select rowid as id, * from tbb
                limit 10 offset #{offset}", (err, rows) ->
-                 callback rows
+                 callback rows, total
+
+exports.get = get = (id, callback) ->
+  if !id? or !(!isNaN(parseFloat(id)) and isFinite(id) and (id % 1 == 0))
+    return callback []
+  id = parseFloat id
+  console.log id
+  db.serialize ->
+    db.all "select rowid as id, * from tbb
+              where rowid = ?", [id], (err, rows) ->
+                if (err?)
+                  return console.log err
+                callback rows
+
