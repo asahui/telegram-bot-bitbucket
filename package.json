@@ -7,7 +7,8 @@
 	"homepage": "https://github.com/asahui/telegram-bot-bitbucket",
 	"dependencies": {
 		"telegram-bot-coffee": ">=1.0.0",
-    "request": ">=2.45.0"
+    "request": ">=2.45.0",
+    "sqlite3": ">=3.0.0"
 	},
 	"scripts": {
 		"prepublish": "cake build"

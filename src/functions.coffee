@@ -60,7 +60,12 @@ exports.setup = (telegram, store, server) ->
         request {url: api, qs: qs, json:true}, (err, req, res) ->
           console.log(res)
           telegram.sendMessage msg.chat.id, res.hitokoto if res.hitokoto?
-
+    ,
+      cmd: 'hint'
+      num: 0
+      desc: 'Add a message as a hint that could be queried later'
+      act: (msg) ->
+        console.log(msg.reply_to_message.text) if msg.reply_to_message?.text?
 
   ]
 
