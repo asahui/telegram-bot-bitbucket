@@ -1,12 +1,16 @@
 request = require 'request'
+db = require './database'
 
 exports.name = 'bitbucket'
 exports.desc = 'forward bitbucket notification'
+
 
 exports.setup = (telegram, store, server) ->
   parser = require './parser'
   pkg = require '../package.json'
   config = require '../config.json'
+  db.connect()
+  db.create()
 
   [
       cmd: 'hello'
@@ -62,10 +66,19 @@ exports.setup = (telegram, store, server) ->
           telegram.sendMessage msg.chat.id, res.hitokoto if res.hitokoto?
     ,
       cmd: 'hint'
-      num: 0
+      num: 2
+      opt: 1
       desc: 'Add a message as a hint that could be queried later'
-      act: (msg) ->
-        console.log(msg.reply_to_message.text) if msg.reply_to_message?.text?
+      act: (msg, cmd, option) =>
+        switch cmd
+          # for add, option is the title
+          when "a", "add" then handleHint telegram, msg, "add", option
+          # for search, option is the keyword
+          when "s", "search" then handleHint telegram, msg, "search", option
+          # for list, option is the page
+          when "l", "list" then handleHint telegram, msg, "list", option
+          # for get, option is the id
+          when "g", "get" then handleHint telegram, msg, "get", option
 
   ]
 
@@ -113,3 +126,54 @@ exports.hack = ->
         return true
       return false
   ]
+
+handleHint = (telegram, msg, cmd, option) =>
+    try
+
+      trimMessage = (message) ->
+          m = message.split('\n')
+          m = if m.length > 1 then m[0] + "..." else m[0]
+          message = if m.length <= 40 then m else m.substr(0, 37) + '...'
+      switch cmd
+        when "add"
+          db.add option, msg.reply_to_message.text, msg.from.username, (err) =>
+            if (err?)
+              text = err
+            else
+              text = "Hint \'#{option}\' is added to hint list."
+            telegram.sendMessage msg.chat.id, text
+        when "search"
+          db.search option, (rows) =>
+            res = for {id, title, hints, author} in rows
+              "#{id}: #{title} - #{trimMessage hints}... - by #{author}"
+            console.log(res)
+            text = res.join "\n"
+            text = if text.length != 0 then text else "oops! nothing found."
+            telegram.sendMessage msg.chat.id,  text
+        when "list"
+          db.list option, (rows, totalnum) =>
+            res = for {id, title, hints, author} in rows
+              "#{id}: #{title} - #{trimMessage hints} - by #{author}"
+            console.log(res)
+            text = res.join "\n"
+            text = if text.length != 0 then text else "oops! nothing found."
+            if totalnum > 0
+              pages = [1..Math.ceil(totalnum / 10)]
+              pages = pages.join(' | ')
+              if option?
+                pages = pages.replace(option, "*#{option}*")
+              else
+                pages = pages.replace("1", "*1*")
+              text += "\n------------\nPages: #{pages}\n"
+            telegram.sendMessage msg.chat.id, text, parse_mode = "Markdown"
+        when "get"
+          db.get option, (rows) =>
+            res = for {id, title, hints, author} in rows
+              "#{title}\n\n#{hints}\n\nBy #{author}"
+            console.log(res)
+            text = res.join "\n"
+            text = if text.length != 0 then text else "oops! nothing found."
+            telegram.sendMessage msg.chat.id, text
+    catch err
+      console.log err
+
