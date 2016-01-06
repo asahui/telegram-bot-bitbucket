@@ -71,7 +71,7 @@ exports.setup = (telegram, store, server) ->
       desc: 'Add a message as a hint that could be queried later\n
              cmd are: a(dd) l(ist) s(earch) g(et)\n
              usage:\n
-             /hint a "a hint" -  add reply message as a hint with title "a hint"\n
+             /hint a "a hint" -  add reply message(start with /) as a hint with title "a hint"\n
              /hint l [page] - list hints, 10 hints per page\n
              /hint s keyword - search hints contains keyword\n
              /hint g id  - get a detail information of a hit'
@@ -142,7 +142,21 @@ handleHint = (telegram, msg, cmd, option) =>
           message = if m.length <= 40 then m else m.substr(0, 37) + '...'
       switch cmd
         when "add"
-          db.add option, msg.reply_to_message.text, msg.from.username, (err) =>
+          if !msg.reply_to_message?
+            text = "Please supply a reply message starting with a line containing a /"
+            return telegram.sendMessage msg.chat.id, text
+
+          # trim the first line if it is startsWith /
+          # Use Shift+Enter, there will be a \n
+          # Use Ctrl+Enter, there will be a space join the first two lines
+          t = msg.reply_to_message.text
+          if t.startsWith("/")
+            # trim char / and line-break
+            t = t.substr(2)
+          else
+            t = msg.reply_to_message.text
+
+          db.add option, t, msg.from.username, (err) =>
             if (err?)
               text = err
             else
