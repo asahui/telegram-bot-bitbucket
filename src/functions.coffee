@@ -68,7 +68,13 @@ exports.setup = (telegram, store, server) ->
       cmd: 'hint'
       num: 2
       opt: 1
-      desc: 'Add a message as a hint that could be queried later'
+      desc: 'Add a message as a hint that could be queried later\n
+             cmd are: a(dd) l(ist) s(earch) g(et)\n
+             usage:\n
+             /hint a "a hint" -  add reply message as a hint with title "a hint"\n
+             /hint l [page] - list hints, 10 hints per page\n
+             /hint s keyword - search hints contains keyword\n
+             /hint g id  - get a detail information of a hit'
       act: (msg, cmd, option) =>
         switch cmd
           # for add, option is the title
